@@ -81,49 +81,56 @@ class LoRALinear(nn.Module):
         
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         result = self.linear(x)
-        lora_result = (self.lora_dropout(x) @ self.lora_A.T @ self.lora_B.T) * self.scale
+        lora_result = (self.dropout(x) @ self.lora_A.T @ self.lora_B.T) * self.scale
         
         return result + lora_result
     
     
-def apply_svd_main_and_lora(model: nn.Module, svd_r: int = 1024 - 1, lora_rank: int = 4, 
-                            lora_alpha: int = 16, lora_dropout: float = 0.1):
-
+def apply_svd_main_and_lora(model: nn.Module, svd_r: int = 1024 - 1, lora_rank: int = 4, lora_alpha: int = 16, lora_dropout: float = 0.1):
     
-    target_modules = ["self_attn.q_proj", "self_attn.k_proj", "self_attn.v_proj", 
-                      "self_attn.out_proj", "mlp.fc1", "mlp.fc2"]
+    logger.info("SVD拆解 LoRA加装...")
+    
+    target_modules = ["q_proj", "k_proj", "v_proj", "out_proj", "fc1", "fc2"]
     
     replaced_count = 0
     
-    
-    for parent_name, parent_module in model.named_modules():
-        if any(t in parent_name for t in target_modules):
-            for child_name, child in list(parent_module.named_children()):
-                if isinstance(child, nn.Linear):
-                  
-                    svd_layer = SVDMainOnlyLinear(
-                        child.in_features,
-                        child.out_features,
-                        r=svd_r,
-                        bias=child.bias is not None,
-                        init_weight=child.weight.data.clone(),
-                        init_bias=child.bias.data.clone() if child.bias is not None else None
-                    )
-                    
-               
-                    lora_layer = LoRALinear(svd_layer, rank=lora_rank, alpha=lora_alpha, dropout=lora_dropout)
-                    
+  
+    for name, module in model.named_modules():
+        if any(t in name for t in target_modules) and isinstance(module, nn.Linear):
+           
+            parent_name = name.rsplit('.', 1)[0] if '.' in name else ''
+            module_name = name.rsplit('.', 1)[-1]
             
-                    setattr(parent_module, child_name, lora_layer)
-                    replaced_count += 1
+            if parent_name:
+                parent = dict(model.named_modules())[parent_name]
+                
+               
+                svd_layer = SVDMainOnlyLinear(
+                    module.in_features,
+                    module.out_features,
+                    r=svd_r,
+                    bias=module.bias is not None,
+                    init_weight=module.weight.data.clone(),
+                    init_bias=module.bias.data.clone() if module.bias is not None else None
+                )
+                
+              
+                lora_layer = LoRALinear(svd_layer, rank=lora_rank, alpha=lora_alpha, dropout=lora_dropout)
+                
+               
+                setattr(parent, module_name, lora_layer)
+                replaced_count += 1
+        
+    
     
     for param_name, param in model.named_parameters():
         if any(x in param_name for x in ['lora_A', 'lora_B']):
             param.requires_grad = True
         else:
             param.requires_grad = False
+   
     
-    return model      
+    return model
 
 
 
