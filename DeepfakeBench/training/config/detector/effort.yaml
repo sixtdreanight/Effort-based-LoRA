@@ -73,6 +73,14 @@ manualSeed: 1024   # manual seed for random number generation
 save_ckpt: true   # whether to save checkpoint
 save_feat: true   # whether to save features
 
+#lora
+lora:
+  enable: true
+  svd_r: 1023
+  rank: 4
+  alpha: 4
+  dropout: 0.1
+
 # loss function
 loss_func: cross_entropy   # loss function to use
 losstype: null
