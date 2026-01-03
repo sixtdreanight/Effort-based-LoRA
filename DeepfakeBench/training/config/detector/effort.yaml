@@ -78,7 +78,7 @@ lora:
   enable: true
   svd_r: 1023
   rank: 4
-  alpha: 4
+  alpha: 12
   dropout: 0.1
 
 # loss function
