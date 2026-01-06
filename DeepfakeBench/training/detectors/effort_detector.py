@@ -108,7 +108,7 @@ class EffortDetector(nn.Module):
                 clip.vision_model,
                 lora_cfg.get("svd_r", 1023),
                 lora_cfg.get("rank", 4),
-                lora_cfg.get("alpha", 16),
+                lora_cfg.get("alpha", 12),
                 lora_cfg.get("dropout", 0.1),
             )
             logger.info(f"SVD + LoRA enabled | replaced {n} layers")
