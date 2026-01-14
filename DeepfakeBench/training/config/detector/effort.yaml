@@ -1,5 +1,5 @@
 # log dir 
-log_dir: ./zhiyuanyan/logs/benchv2/icml25/release
+log_dir: ./log
 
 # model setting
 pretrained: 'no need to provide this for the effort model'
@@ -16,7 +16,7 @@ backbone_config:
 # dataset
 all_dataset: [FaceForensics++, FF-F2F, FF-DF, FF-FS, FF-NT, FaceShifter, DeepFakeDetection, Celeb-DF-v1, Celeb-DF-v2, DFDCP, DFDC, DeeperForensics-1.0, UADFV]
 train_dataset: [FaceForensics++]
-test_dataset: [DFDC,Celeb-DF-v2, FaceShifter, DeeperForensics-1.0]
+test_dataset: [DFDC,Celeb-DF-v2]
 
 compression: c23  # compression-level for videos
 train_batchSize: 32   # training batch size
@@ -73,13 +73,26 @@ manualSeed: 1024   # manual seed for random number generation
 save_ckpt: true   # whether to save checkpoint
 save_feat: true   # whether to save features
 
-#lora
-lora:
-  enable: true
-  svd_r: 1023
-  rank: 4
-  alpha: 12
-  dropout: 0.1
+#method
+method_config:
+  type: svd
+
+  svd:
+    svd_r: 1023
+    lambda_reg: 1.0
+    
+  svd_lora:
+    svd_r: 1023
+    lora_rank: 4
+    lora_alpha: 12
+    lora_dropout: 0.1
+
+  lora:
+    lora_rank: 4
+    lora_alpha: 12
+    lora_dropout: 0.1
+  
+clip_path: "/home/user1/effort/Effort-AIGI-Detection/Effort-AIGI-Detection/DeepfakeBench/training/models--openai--clip-vit-large-patch14/"
 
 # loss function
 loss_func: cross_entropy   # loss function to use
@@ -89,7 +102,7 @@ losstype: null
 metric_scoring: auc   # metric for evaluation (auc, acc, eer, ap)
 
 # cuda
-ngpu: 1   # number of GPUs to use
+ngpu: 2   # number of GPUs to use
 cuda: true   # whether to use CUDA acceleration
 cudnn: true   # whether to use CuDNN for convolution operations
 
